@@ -2,6 +2,7 @@ import streamlit as st
 import yfinance as yf
 from datetime import datetime
 import pandas as pd
+from datetime import timedelta
 
 st.title('Equity Return Analysis')
 
@@ -32,7 +33,10 @@ for data in initial_data:
     
     # Fetch historical price
     stock = yf.Ticker(ticker)
-    hist = stock.history(start=purchase_date.strftime('%Y-%m-%d'), end=purchase_date.strftime('%Y-%m-%d'))
+    hist = stock.history(
+    start=purchase_date.strftime('%Y-%m-%d'),
+    end=(purchase_date + timedelta(days=1)).strftime('%Y-%m-%d')
+)
     purchase_price = hist['Close'].iloc[0] if not hist.empty else None
     
     # Calculate returns
