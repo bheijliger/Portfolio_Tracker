@@ -1,73 +1,54 @@
 import streamlit as st
-import pandas as pd
 import yfinance as yf
+from datetime import datetime
+import pandas as pd
 
-st.title('Portfolio Tracker')
+st.title('Equity Return Analysis')
 
-portfolio = [
-    {
-        'Name': 'Apple Inc.',
-        'Ticker': 'AAPL',
-        'Stock Exchange': 'New York',
-        'Date of Purchase': '2024-02-15',
-        'Price at Purchase': 190.25,
-    },
-    {
-        'Name': 'Microsoft Corp.',
-        'Ticker': 'MSFT',
-        'Stock Exchange': 'New York',
-        'Date of Purchase': '2025-01-10',
-        'Price at Purchase': 340.75,
-    },
-    {
-        'Name': 'Shell UK Plc',
-        'Ticker': 'SHEL.L',
-        'Stock Exchange': 'London',
-        'Date of Purchase': '2024-08-05',
-        'Price at Purchase': 120.50,
-    },
+# Sample data - can be replaced with user input
+initial_data = [
+    {'Company': 'Visa Inc.', 'Ticker': 'V', 'Exchange': 'NYSE', 'Purchase Date': '2026-05-21'},
+    {'Company': 'Danaos Corporation', 'Ticker': 'DAC', 'Exchange': 'NYSE', 'Purchase Date': '2026-05-21'},
+    {'Company': 'Morgan Stanley', 'Ticker': 'MS', 'Exchange': 'NYSE', 'Purchase Date': '2026-05-21'},
+    {'Company': 'Arm Holdings plc', 'Ticker': 'ARM', 'Exchange': 'NASDAQ', 'Purchase Date': '2026-05-21'},
+    {'Company': 'Taiwan Semiconductor Manufacturing Co.', 'Ticker': 'TSM', 'Exchange': 'NYSE', 'Purchase Date': '2026-05-21'},
+    {'Company': 'Bloom Energy Corporation', 'Ticker': 'BE', 'Exchange': 'NYSE', 'Purchase Date': '2026-05-21'},
+    {'Company': 'Boeing Company', 'Ticker': 'BA', 'Exchange': 'NYSE', 'Purchase Date': '2026-05-21'},
+    {'Company': 'NVIDIA Corporation', 'Ticker': 'NVDA', 'Exchange': 'NASDAQ', 'Purchase Date': '2026-05-21'},
+    {'Company': 'Philip Morris International', 'Ticker': 'PM', 'Exchange': 'NYSE', 'Purchase Date': '2026-05-21'},
+    {'Company': 'Invesco Water Resources ETF', 'Ticker': 'PHO', 'Exchange': 'NASDAQ', 'Purchase Date': '2026-05-21'}
 ]
 
-rows = []
-for position in portfolio:
-    ticker = position['Ticker']
-    try:
-        stock = yf.Ticker(ticker)
-        current_price = None
-        if hasattr(stock, 'fast_info') and stock.fast_info is not None:
-            current_price = stock.fast_info.last_price
-        if current_price is None:
-            hist = stock.history(period='5d')
-            if not hist.empty:
-                current_price = hist['Close'].iloc[-1]
+# Fetch historical price on purchase date
+results = []
+for data in initial_data:
+    company = data['Company']
+    ticker = data['Ticker']
+    exchange = data['Exchange']
+    purchase_date_str = data['Purchase Date']
+    
+    # Convert to datetime object
+    purchase_date = datetime.strptime(purchase_date_str, '%Y-%m-%d')
+    
+    # Fetch historical price
+    stock = yf.Ticker(ticker)
+    hist = stock.history(start=purchase_date.strftime('%Y-%m-%d'), end=purchase_date.strftime('%Y-%m-%d'))
+    purchase_price = hist['Close'].iloc[0] if not hist.empty else None
+    
+    # Calculate returns
+    current_price = stock.info.get('currentPrice')
+    change_percent = ((current_price - purchase_price)/purchase_price)*100 if purchase_price else 0
+    
+    results.append({
+        'Company': company,
+        'Ticker': ticker,
+        'Exchange': exchange,
+        'Purchase Date': purchase_date_str,
+        'Purchase Price': f'${purchase_price:.2f}' if purchase_price else 'N/A',
+        'Current Price': f'${current_price:.2f}' if current_price else 'N/A',
+        'Percentage Change': f'{change_percent:.1f}%' if purchase_price else 'N/A'
+    })
 
-        if current_price is None:
-            current_price = 0.0
-
-        percent_change = 0.0
-        if position['Price at Purchase']:
-            percent_change = ((current_price - position['Price at Purchase']) / position['Price at Purchase']) * 100
-
-        rows.append({
-            'Name': position['Name'],
-            'Ticker': ticker,
-            'Stock Exchange': position['Stock Exchange'],
-            'Date of Purchase': position['Date of Purchase'],
-            'Price at Purchase': position['Price at Purchase'],
-            'Price Now': round(current_price, 2),
-            '% Change': f"{percent_change:.2f}%",
-        })
-    except Exception as exc:
-        rows.append({
-            'Name': position['Name'],
-            'Ticker': ticker,
-            'Stock Exchange': position['Stock Exchange'],
-            'Date of Purchase': position['Date of Purchase'],
-            'Price at Purchase': position['Price at Purchase'],
-            'Price Now': 'N/A',
-            '% Change': 'N/A',
-        })
-
-st.table(pd.DataFrame(rows))
-
-
+# Display results
+st.write('This app shows the return on equities bought on specific dates.')
+st.dataframe(pd.DataFrame(results))
