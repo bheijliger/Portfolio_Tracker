@@ -18,16 +18,16 @@ st.write(
 # not future dates
 
 initial_data = [
-    {"Company": "Visa Inc.", "Ticker": "V", "Exchange": "NYSE", "Purchase Date": "2025-05-21"},
-    {"Company": "Danaos Corporation", "Ticker": "DAC", "Exchange": "NYSE", "Purchase Date": "2025-05-21"},
-    {"Company": "Morgan Stanley", "Ticker": "MS", "Exchange": "NYSE", "Purchase Date": "2025-05-21"},
-    {"Company": "Arm Holdings plc", "Ticker": "ARM", "Exchange": "NASDAQ", "Purchase Date": "2025-05-21"},
-    {"Company": "Taiwan Semiconductor Manufacturing Co.", "Ticker": "TSM", "Exchange": "NYSE", "Purchase Date": "2025-05-21"},
-    {"Company": "Bloom Energy Corporation", "Ticker": "BE", "Exchange": "NYSE", "Purchase Date": "2025-05-21"},
-    {"Company": "Boeing Company", "Ticker": "BA", "Exchange": "NYSE", "Purchase Date": "2025-05-21"},
-    {"Company": "NVIDIA Corporation", "Ticker": "NVDA", "Exchange": "NASDAQ", "Purchase Date": "2025-05-21"},
-    {"Company": "Philip Morris International", "Ticker": "PM", "Exchange": "NYSE", "Purchase Date": "2025-05-21"},
-    {"Company": "Invesco Water Resources ETF", "Ticker": "PHO", "Exchange": "NASDAQ", "Purchase Date": "2025-05-21"},
+    {"Company": "Visa Inc.", "Ticker": "V", "Exchange": "NYSE", "Purchase Date": "2026-05-21"},
+    {"Company": "Danaos Corporation", "Ticker": "DAC", "Exchange": "NYSE", "Purchase Date": "2026-05-21"},
+    {"Company": "Morgan Stanley", "Ticker": "MS", "Exchange": "NYSE", "Purchase Date": "2026-05-21"},
+    {"Company": "Arm Holdings plc", "Ticker": "ARM", "Exchange": "NASDAQ", "Purchase Date": "2026-05-21"},
+    {"Company": "Taiwan Semiconductor Manufacturing Co.", "Ticker": "TSM", "Exchange": "NYSE", "Purchase Date": "2026-05-21"},
+    {"Company": "Bloom Energy Corporation", "Ticker": "BE", "Exchange": "NYSE", "Purchase Date": "2026-05-21"},
+    {"Company": "Boeing Company", "Ticker": "BA", "Exchange": "NYSE", "Purchase Date": "2026-05-21"},
+    {"Company": "NVIDIA Corporation", "Ticker": "NVDA", "Exchange": "NASDAQ", "Purchase Date": "2026-05-21"},
+    {"Company": "Philip Morris International", "Ticker": "PM", "Exchange": "NYSE", "Purchase Date": "2026-05-21"},
+    {"Company": "Invesco Water Resources ETF", "Ticker": "PHO", "Exchange": "NASDAQ", "Purchase Date": "2026-05-21"},
 ]
 
 results = []
