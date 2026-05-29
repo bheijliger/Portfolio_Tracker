@@ -29,7 +29,7 @@ st.write(
 # =========================================================
 
 initial_data = [
-    {"Company": "BAE Systems", "Ticker": "BA", "Exchange": "LSE", "Purchase Date": "2026-05-28"},
+    {"Company": "BAE Systems", "Ticker": "BA.L", "Exchange": "LSE", "Purchase Date": "2026-05-28"},
     {"Company": "Danaos Corporation", "Ticker": "DAC", "Exchange": "NYSE", "Purchase Date": "2026-05-21"},
     {"Company": "Morgan Stanley", "Ticker": "MS", "Exchange": "NYSE", "Purchase Date": "2026-05-21"},
     {"Company": "Arm Holdings plc", "Ticker": "ARM", "Exchange": "NASDAQ", "Purchase Date": "2026-05-21"},
