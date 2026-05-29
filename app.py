@@ -14,6 +14,7 @@ st.title("Equity Return Analysis")
 
 st.write(
     """
+    DISCLAIMER: THIS DOES NOT INCLUDE UK STOCKS
     This app calculates:
 
     - Purchase price
