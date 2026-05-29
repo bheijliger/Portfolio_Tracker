@@ -1,21 +1,32 @@
-
 import streamlit as st
 import yfinance as yf
 import pandas as pd
+import plotly.express as px
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
-st.set_page_config(page_title="Equity Return Analysis", layout="wide")
+st.set_page_config(
+    page_title="Equity Return Analysis",
+    layout="wide"
+)
 
 st.title("Equity Return Analysis")
 
 st.write(
-    "This app calculates the return on equities purchased on a given date."
+    """
+    This app calculates:
+
+    - Purchase price
+    - Current price
+    - Total return
+    - Daily percentage changes
+    - Portfolio-level cumulative returns
+    """
 )
 
-# IMPORTANT:
-# Purchase dates must be REAL past dates
-# not future dates
+# =========================================================
+# INITIAL DATA
+# =========================================================
 
 initial_data = [
     {"Company": "Visa Inc.", "Ticker": "V", "Exchange": "NYSE", "Purchase Date": "2026-05-21"},
@@ -30,7 +41,29 @@ initial_data = [
     {"Company": "Invesco Water Resources ETF", "Ticker": "PHO", "Exchange": "NASDAQ", "Purchase Date": "2026-05-21"},
 ]
 
+# =========================================================
+# CACHE FUNCTION
+# =========================================================
+
+@st.cache_data
+def get_stock_history(ticker, start_date):
+
+    stock = yf.Ticker(ticker)
+
+    hist = stock.history(
+        start=start_date,
+        end=datetime.today().strftime("%Y-%m-%d")
+    )
+
+    return hist
+
+
+# =========================================================
+# PROCESS DATA
+# =========================================================
+
 results = []
+historical_data = {}
 
 with st.spinner("Fetching market data..."):
 
@@ -43,67 +76,79 @@ with st.spinner("Fetching market data..."):
 
         try:
 
-            stock = yf.Ticker(ticker)
-
-            # Convert purchase date
             purchase_date = datetime.strptime(
                 purchase_date_str,
                 "%Y-%m-%d"
             )
 
-            # Yahoo Finance end date is EXCLUSIVE
-            next_day = purchase_date + timedelta(days=1)
+            # Validate purchase date
+            if purchase_date > datetime.today():
 
-            # Historical purchase price
-            hist = stock.history(
-                start=purchase_date.strftime("%Y-%m-%d"),
-                end=next_day.strftime("%Y-%m-%d")
+                results.append({
+                    "Company": company,
+                    "Ticker": ticker,
+                    "Exchange": exchange,
+                    "Purchase Date": purchase_date_str,
+                    "Purchase Price": "Invalid",
+                    "Current Price": "Invalid",
+                    "Percentage Change": "Future date"
+                })
+
+                continue
+
+            # Fetch historical data
+            hist = get_stock_history(
+                ticker,
+                purchase_date_str
             )
 
-            if not hist.empty:
-                purchase_price = float(hist["Close"].iloc[0])
-            else:
-                purchase_price = None
+            # Check if history exists
+            if hist.empty:
 
-            # Current price
-            current_hist = stock.history(period="1d")
+                results.append({
+                    "Company": company,
+                    "Ticker": ticker,
+                    "Exchange": exchange,
+                    "Purchase Date": purchase_date_str,
+                    "Purchase Price": "N/A",
+                    "Current Price": "N/A",
+                    "Percentage Change": "No data"
+                })
 
-            if not current_hist.empty:
-                current_price = float(current_hist["Close"].iloc[-1])
-            else:
-                current_price = None
+                continue
 
-            # Percentage return
-            if purchase_price is not None and current_price is not None:
+            # Purchase & current prices
+            purchase_price = float(hist["Close"].iloc[0])
+            current_price = float(hist["Close"].iloc[-1])
 
-                change_percent = (
-                    (current_price - purchase_price)
-                    / purchase_price
-                ) * 100
+            # Total return
+            change_percent = (
+                (current_price - purchase_price)
+                / purchase_price
+            ) * 100
 
-            else:
-                change_percent = None
+            # Daily % changes
+            hist["Daily % Change"] = (
+                hist["Close"].pct_change()
+            ) * 100
 
+            # Cumulative return
+            hist["Cumulative Return %"] = (
+                (hist["Close"] / purchase_price) - 1
+            ) * 100
+
+            # Store for later
+            historical_data[ticker] = hist
+
+            # Summary results
             results.append({
                 "Company": company,
                 "Ticker": ticker,
                 "Exchange": exchange,
                 "Purchase Date": purchase_date_str,
-                "Purchase Price": (
-                    f"${purchase_price:,.2f}"
-                    if purchase_price is not None
-                    else "N/A"
-                ),
-                "Current Price": (
-                    f"${current_price:,.2f}"
-                    if current_price is not None
-                    else "N/A"
-                ),
-                "Percentage Change": (
-                    f"{change_percent:.2f}%"
-                    if change_percent is not None
-                    else "N/A"
-                )
+                "Purchase Price": f"${purchase_price:,.2f}",
+                "Current Price": f"${current_price:,.2f}",
+                "Percentage Change": f"{change_percent:.2f}%"
             })
 
         except Exception as e:
@@ -118,17 +163,24 @@ with st.spinner("Fetching market data..."):
                 "Percentage Change": str(e)
             })
 
-# Create dataframe
+# =========================================================
+# SUMMARY TABLE
+# =========================================================
+
+st.subheader("Portfolio Summary")
+
 df = pd.DataFrame(results)
 
-# Display dataframe
 st.dataframe(
     df,
     use_container_width=True,
     hide_index=True
 )
 
-# Optional download button
+# =========================================================
+# DOWNLOAD BUTTON
+# =========================================================
+
 csv = df.to_csv(index=False).encode("utf-8")
 
 st.download_button(
@@ -138,3 +190,106 @@ st.download_button(
     mime="text/csv"
 )
 
+# =========================================================
+# PORTFOLIO-LEVEL RETURNS
+# =========================================================
+
+st.subheader("Portfolio-Level Cumulative Returns")
+
+portfolio_returns = pd.DataFrame()
+
+for ticker, hist in historical_data.items():
+
+    temp = hist[["Cumulative Return %"]].copy()
+
+    temp.columns = [ticker]
+
+    portfolio_returns = pd.concat(
+        [portfolio_returns, temp],
+        axis=1
+    )
+
+# Average cumulative return across portfolio
+portfolio_returns["Portfolio Average Return %"] = (
+    portfolio_returns.mean(axis=1)
+)
+
+# Reset index for plotting
+plot_df = portfolio_returns.reset_index()
+
+fig = px.line(
+    plot_df,
+    x="Date",
+    y="Portfolio Average Return %",
+    title="Portfolio Average Cumulative Return"
+)
+
+st.plotly_chart(
+    fig,
+    use_container_width=True
+)
+
+# Display raw portfolio data
+with st.expander("Portfolio Return Data"):
+
+    st.dataframe(
+        portfolio_returns.round(2),
+        use_container_width=True
+    )
+
+# =========================================================
+# INDIVIDUAL STOCK ANALYSIS
+# =========================================================
+
+st.subheader("Individual Equity Analysis")
+
+for ticker, hist in historical_data.items():
+
+    with st.expander(f"{ticker} Analysis"):
+
+        display_df = hist[[
+            "Close",
+            "Daily % Change",
+            "Cumulative Return %"
+        ]].copy()
+
+        display_df = display_df.round(2)
+
+        st.write(f"### {ticker} Daily Performance")
+
+        st.dataframe(
+            display_df,
+            use_container_width=True
+        )
+
+        # =================================================
+        # DAILY RETURN CHART
+        # =================================================
+
+        daily_fig = px.line(
+            display_df.reset_index(),
+            x="Date",
+            y="Daily % Change",
+            title=f"{ticker} Daily Percentage Changes"
+        )
+
+        st.plotly_chart(
+            daily_fig,
+            use_container_width=True
+        )
+
+        # =================================================
+        # CUMULATIVE RETURN CHART
+        # =================================================
+
+        cumulative_fig = px.line(
+            display_df.reset_index(),
+            x="Date",
+            y="Cumulative Return %",
+            title=f"{ticker} Cumulative Return Since Purchase"
+        )
+
+        st.plotly_chart(
+            cumulative_fig,
+            use_container_width=True
+        )
