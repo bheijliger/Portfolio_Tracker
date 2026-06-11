@@ -229,6 +229,74 @@ st.plotly_chart(
     use_container_width=True
 )
 
+# =========================================================
+# COVARIANCE / CORRELATION MATRICES
+# =========================================================
+
+cov_returns = pd.DataFrame()
+
+for ticker, hist in historical_data.items():
+    if "Daily % Change" in hist.columns:
+        temp = hist[["Daily % Change"]].copy()
+        temp.columns = [ticker]
+        cov_returns = pd.concat([cov_returns, temp], axis=1)
+
+if not cov_returns.empty:
+    corr_matrix = cov_returns.corr()
+    cov_matrix = cov_returns.cov()
+
+    st.subheader("Equity Daily Return Correlation")
+    st.write(
+        "Daily percentage return correlations across equities."
+    )
+
+    st.dataframe(
+        corr_matrix.round(4),
+        use_container_width=True
+    )
+
+    corr_fig = px.imshow(
+        corr_matrix,
+        text_auto=True,
+        aspect="auto",
+        title="Correlation Matrix of Daily Equity Returns",
+        color_continuous_scale="RdBu",
+        origin="lower",
+        zmin=-1,
+        zmax=1
+    )
+
+    st.plotly_chart(
+        corr_fig,
+        use_container_width=True
+    )
+
+    st.subheader("Equity Daily Return Covariance")
+    st.write(
+        "Daily percentage return covariance across equities."
+    )
+
+    st.dataframe(
+        cov_matrix.round(4),
+        use_container_width=True
+    )
+
+    cov_fig = px.imshow(
+        cov_matrix,
+        text_auto=True,
+        aspect="auto",
+        title="Covariance Matrix of Daily Equity Returns",
+        color_continuous_scale="RdBu",
+        origin="lower"
+    )
+
+    st.plotly_chart(
+        cov_fig,
+        use_container_width=True
+    )
+else:
+    st.info("Not enough data to calculate the covariance matrix.")
+
 # Display raw portfolio data
 with st.expander("Portfolio Return Data"):
 
